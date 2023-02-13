@@ -92,13 +92,33 @@ const products = [
 
   // More products...
 ];
+import { SignInWithGoogle } from "./SignInWithGoogle.jsx";
+import { useState } from "react";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../firebase";
+import { useDispatch, useSelector } from "react-redux";
+import { setCarrito } from "../store/Slices/Usuario";
+
 const GroupProducts = () => {
+  const id = localStorage.getItem("id");
+  const redux = useSelector((state) => state.usuario);
+  const [allProducts, setAllProducts] = useState([]);
+  const dispatch = useDispatch();
+
+  const addProduct = async (product) => {
+    setAllProducts([...allProducts, product]);
+    dispatch(setCarrito([...allProducts, product]));
+    await updateDoc(doc(db, "usuarios", id), {
+      carrito: [...allProducts, product],
+    });
+  };
+
   return (
-    <div className="bg-white ">
+    <div className="bg-white">
       <div className="mx-auto max-w-2xl py-16 px-4 sm:py-24 sm:px-6 lg:max-w-7xl lg:px-8">
         <div className="mt-6 grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
           {products.map((product) => (
-            <div key={product.id} className="group ">
+            <div key={product.id} className="group" value={product.id}>
               <div className="min-h-80 z-10 aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-md bg-gray-200 hover:opacity-75 lg:aspect-none lg:h-80">
                 <img
                   src={product.imageSrc}
@@ -120,7 +140,11 @@ const GroupProducts = () => {
                 </p>
               </div>
               <div className="flex flex-col justify-center">
-                <button className="bg-purple-500 text-white mt-5 py-2 border rounded-md w-full text-sm font-sans hover:bg-purple-400">
+                <button
+                  className="bg-purple-500 text-white mt-5 py-2 border rounded-md w-full text-sm font-sans hover:bg-purple-400"
+                  type="submit"
+                  onClick={id ? () => addProduct(product) : SignInWithGoogle()}
+                >
                   Agregar al carrito
                 </button>
               </div>
