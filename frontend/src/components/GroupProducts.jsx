@@ -93,7 +93,7 @@ const products = [
   // More products...
 ];
 import { SignInWithGoogle } from "./SignInWithGoogle.jsx";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { useDispatch, useSelector } from "react-redux";
@@ -112,6 +112,12 @@ const GroupProducts = () => {
       carrito: [...allProducts, product],
     });
   };
+
+  useEffect(() => {
+    if (redux.datos.carrito) {
+      setAllProducts([...redux.datos.carrito]);
+    }
+  }, [redux.datos.carrito]);
 
   return (
     <div className="bg-white">
