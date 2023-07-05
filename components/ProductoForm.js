@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Spinner from "./Spinner";
 import { ReactSortable } from "react-sortablejs";
@@ -10,17 +10,38 @@ export default function ProductoForm({
   descripcion: existingDescription,
   precio: existingPrice,
   imagenes: existingImages,
+  categoria: existingCategory,
+  propiedades: existingProperties,
 }) {
   const [titulo, setTitulo] = useState(existingTitle || "");
   const [descripcion, setDescripcion] = useState(existingDescription || "");
+  const [categoria, setCategoria] = useState(existingCategory || "");
+  const [productoPropiedades, setProductoPropiedades] = useState(
+    existingProperties || {}
+  );
   const [precio, setPrecio] = useState(existingPrice || "");
   const [imagenes, setImagenes] = useState(existingImages || []);
   const [obtenerProductos, setObtenerProductos] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [categorias, setCategorias] = useState([]);
   const router = useRouter();
+
+  useEffect(() => {
+    axios.get("/api/categorias").then((res) => {
+      setCategorias(res.data);
+    });
+  }, []);
+
   async function crearProducto(e) {
     e.preventDefault();
-    const data = { titulo, descripcion, precio, imagenes };
+    const data = {
+      titulo,
+      descripcion,
+      precio,
+      imagenes,
+      categoria,
+      propiedades: productoPropiedades,
+    };
     if (_id) {
       // update
       await axios.put("/api/productos", { ...data, _id });
@@ -54,6 +75,36 @@ export default function ProductoForm({
   function updateImagesOrder(images) {
     setImagenes(images);
   }
+
+  function setProductProp(propName, value) {
+    setProductoPropiedades((prev) => {
+      const newProductProps = { ...prev };
+      newProductProps[propName] = value;
+      return newProductProps;
+    });
+  }
+
+  const propiedadesToFill = [];
+  if (categorias.length > 0 && categoria) {
+    let catInfo = categorias.find(({ _id }) => _id === categoria);
+    propiedadesToFill.push(...catInfo.propiedades);
+    while (catInfo?.categoriaPadre?._id) {
+      const parentCat = categorias.find(
+        ({ _id }) => _id === catInfo?.categoriaPadre?._id
+      );
+      propiedadesToFill.push(...parentCat.propiedades);
+      catInfo = parentCat;
+    }
+  }
+
+  function alertDeleteImage(link) {
+    if (confirm("¿Seguro que quieres eliminar esta imagen?")) {
+      setImagenes((oldImages) => {
+        return oldImages.filter((l) => l !== link);
+      });
+    }
+  }
+
   return (
     <form onSubmit={crearProducto}>
       <label>Nombre del Producto</label>
@@ -63,6 +114,38 @@ export default function ProductoForm({
         value={titulo}
         onChange={(e) => setTitulo(e.target.value)}
       />
+      <label>Categoria</label>
+      <select
+        value={categoria}
+        onChange={(ev) => setCategoria(ev.target.value)}
+      >
+        <option value="">Sin Categoria</option>
+        {categorias.length > 0 &&
+          categorias.map((c) => (
+            <option key={c._id} value={c._id}>
+              {c.nombre}
+            </option>
+          ))}
+      </select>
+
+      {propiedadesToFill.length > 0 &&
+        propiedadesToFill.map((p) => (
+          <div key={p.nombre} className="">
+            <label>{p.nombre[0].toUpperCase() + p.nombre.substring(1)}</label>
+            <div>
+              <select
+                value={productoPropiedades[p.nombre]}
+                onChange={(ev) => setProductProp(p.nombre, ev.target.value)}
+              >
+                {p.valor.map((v) => (
+                  <option key={v} value={v}>
+                    {v}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        ))}
 
       <label>Fotos</label>
       <div className="mb-2 flex flex-wrap gap-1">
@@ -73,7 +156,11 @@ export default function ProductoForm({
         >
           {!!imagenes?.length &&
             imagenes.map((link) => (
-              <div key={link} className="h-24">
+              <div
+                key={link}
+                className="h-24 bg-white p-4 shadow-sm rounded-sm border border-gray-200 hover:bg-gray-100 cursor-pointer"
+                onClick={() => alertDeleteImage(link)}
+              >
                 <img src={link} alt="" className="rounded-lg" />
               </div>
             ))}
@@ -85,8 +172,8 @@ export default function ProductoForm({
         )}
         <label
           className="w-24 h-24 cursor-pointer 
-        text-center flex text-sm gap-1 text-gray-500 rounded-lg
-         bg-gray-200 items-center justify-center"
+        text-center flex text-sm gap-1 text-primary rounded-sm
+         items-center justify-center bg-white shadow-sm border border-primary"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

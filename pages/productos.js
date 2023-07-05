@@ -10,14 +10,11 @@ export default function Productos() {
   }, []);
   return (
     <Layout>
-      <Link
-        href={"/productos/nuevo"}
-        className="bg-blue-900 text-white rounded-md py-1 px-2"
-      >
+      <Link href={"/productos/nuevo"} className="btn-primary">
         Agregar Producto
       </Link>
 
-      <table className="basic mt-4">
+      <table className="basic mt-2">
         <thead>
           <tr>
             <td>Nombre del Producto</td>
@@ -29,7 +26,10 @@ export default function Productos() {
             <tr key={producto._id}>
               <td>{producto.titulo}</td>
               <td>
-                <Link href={`/productos/editar/${producto._id}`}>
+                <Link
+                  className="btn-default"
+                  href={`/productos/editar/${producto._id}`}
+                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
@@ -45,7 +45,10 @@ export default function Productos() {
                     />
                   </svg>
                 </Link>
-                <Link href={`/productos/eliminar/${producto._id}`}>
+                <Link
+                  className="btn-red"
+                  href={`/productos/eliminar/${producto._id}`}
+                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
