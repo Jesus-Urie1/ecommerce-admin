@@ -1,10 +1,9 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import Layout from "@/components/Layout";
-import { withSwal } from "react-sweetalert2";
-import { set } from "mongoose";
+import Swal from "sweetalert2";
 
-function Categorias({ swal }) {
+export default function Categorias() {
   const [editedCategoria, setEditedCategoria] = useState(null);
   const [nombre, setNombre] = useState("");
   const [categoriaPadre, setCategoriaPadre] = useState("");
@@ -57,25 +56,23 @@ function Categorias({ swal }) {
   }
 
   function deleteCategoria(categoria) {
-    swal
-      .fire({
-        title: "¿Estas seguro?",
-        text: `¿Quieres eliminar la categoria ${categoria.nombre}?`,
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Si, eliminar",
-        cancelButtonText: "No, cancelar",
-        reverseButtons: true,
-        confirmButtonColor: "#d55",
-      })
-      .then(async (result) => {
-        if (result.isConfirmed) {
-          const { _id } = categoria;
-          await axios.delete("/api/categorias?_id=" + _id);
-          swal.fire("Eliminado!", "La categoria ha sido eliminada.", "success");
-          getCategorias();
-        }
-      });
+    Swal.fire({
+      title: "¿Estas seguro?",
+      text: `¿Quieres eliminar la categoria ${categoria.nombre}?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Si, eliminar",
+      cancelButtonText: "No, cancelar",
+      reverseButtons: true,
+      confirmButtonColor: "#d55",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        const { _id } = categoria;
+        await axios.delete("/api/categorias?_id=" + _id);
+        Swal.fire("Eliminado!", "La categoria ha sido eliminada.", "success");
+        getCategorias();
+      }
+    });
   }
 
   function agregarPropiedad() {
@@ -234,7 +231,3 @@ function Categorias({ swal }) {
     </Layout>
   );
 }
-
-export default withSwal(({ swal }, ref) => (
-  <Categorias swal={swal} ref={ref} />
-));
